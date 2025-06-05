@@ -17,6 +17,7 @@ public class AdminOptions {
 		Scanner sc = new Scanner(System.in);
 		System.out.println("Enter your product_Id :- ");
 		int product_Id = sc.nextInt();
+		sc.nextLine();
 		System.out.println("Enter your name :- ");
 		String name = sc.nextLine();
 		System.out.println("Enter your description :- ");
@@ -37,7 +38,7 @@ public class AdminOptions {
 					System.out.println("--------------------------------------------");
 					System.out.println(name + "Product added success");
 					System.out.println("continue Adding other product");
-					addProduct();
+					adminOps();
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -246,6 +247,8 @@ public class AdminOptions {
 			
 		}catch(Exception e) {
 			e.printStackTrace();
+		}finally {
+			DbConnection.closeConnection(connect);
 		}
 		
 	}
