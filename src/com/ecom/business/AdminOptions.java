@@ -20,20 +20,45 @@ public class AdminOptions {
 		sc.nextLine();
 		System.out.println("Enter your name :- ");
 		String name = sc.nextLine();
+		if (name.isEmpty() || name.replace(" ", "").isEmpty()) {
+			System.out.println("Product Name cannot be empty");
+			System.out.println("Product Adding Failed retry....");
+			return;
+		}
 		System.out.println("Enter your description :- ");
 		String description = sc.nextLine();
 		System.out.println("Enter your price  :- ");
 		double price = sc.nextDouble();
+		sc.nextLine();
+		if (price <= 0) {
+			System.out.println("Price must be greater than 0");
+			System.out.println("Product Adding Failed retry....");
+			return;
+		}
 		System.out.println("Enter your quantity :- ");
 		int quantity = sc.nextInt();
+		sc.nextLine();
+		if (quantity <= 0) {
+			System.out.println("quantity must be greater than 0");
+			System.out.println("Product Adding Failed retry....");
+			return;
+		}
 
 		String insertProduct = "INSERT INTO products (product_Id, name, description, price, quantity) VALUES("
 				+ product_Id + ", '" + name + "', '" + description + "', " + price + ", " + quantity + ")";
+		String checkProduct = " SELECT product_Id,quantity " + "FROM products WHERE product_Id = " + product_Id;
 
 		try {
 			connect = DbConnection.makeConnection();
 			if (connect != null) {
 				try (Statement stmnt = connect.createStatement()) {
+
+					ResultSet result = stmnt.executeQuery(checkProduct);
+					if (result.next()) {
+						System.out.println("Product Id already exists");
+						return;
+					}
+
 					stmnt.execute(insertProduct);
 					System.out.println("--------------------------------------------");
 					System.out.println(name + "Product added success");
@@ -55,6 +80,8 @@ public class AdminOptions {
 	public static void calculateBill(String username) {
 		Connection connect = null;
 
+		String checkusername = "SELECT username FROM user " + "WHERE username = '" + username + "'";
+
 		String viewCartQuery = "SELECT p.name, p.price, c.quantity, (p.price * c.quantity) AS total FROM cart c "
 				+ "JOIN products p ON c.product_id = p.product_id " + "WHERE c.username = '" + username + "'";
 
@@ -65,7 +92,13 @@ public class AdminOptions {
 		try {
 			connect = DbConnection.makeConnection();
 			Statement stmnt = connect.createStatement();
+			ResultSet checkUser = stmnt.executeQuery(checkusername);
 			ResultSet result = stmnt.executeQuery(viewCartQuery);
+
+			if (!checkUser.next()) {
+				System.out.println("Invalid Username... ");
+				return;
+			}
 
 			System.out.println("\nBill for user: " + username);
 
@@ -116,22 +149,21 @@ public class AdminOptions {
 	}
 
 	public static void displayAmount() {
-		
-		if(displayTotal != 0) {
+
+		if (displayTotal != 0) {
 			System.out.println("\n Total Bill for user: ");
-		    System.out.println("----------------------------------------------");
-		    System.out.println("\t\t  Grand Total:- " + displayTotal);
-		    System.out.println("----------------------------------------------");
-		    
-		    displayTotal = 0;
-		    
-		    
+			System.out.println("----------------------------------------------");
+			System.out.println("\t\t  Grand Total:- " + displayTotal);
+			System.out.println("----------------------------------------------");
+
+			displayTotal = 0;
+
 			System.out.println("Press 1 to Go Back to Admin Menu");
 
 			Scanner sc = new Scanner(System.in);
 			int choose = sc.nextInt();
 			switch (choose) {
-			
+
 			case 1:
 				adminOps();
 				break;
@@ -140,10 +172,9 @@ public class AdminOptions {
 				adminOps();
 				break;
 			}
-		}else {
+		} else {
 			System.out.println("First calculate Bill for user...");
 		}
-		 
 
 	}
 
@@ -220,16 +251,26 @@ public class AdminOptions {
 	public static void userHistory(String userName) {
 		Connection connect = null;
 
-		String viewUserHistory = "SELECT order_id,username,total_Amount,order_date FROM orders o WHERE o.username = '" + userName + "' ";
-		
+		String checkusername = "SELECT username FROM user " + "WHERE username = '" + userName + "'";
+		String viewUserHistory = "SELECT order_id,username,total_Amount,order_date FROM orders o WHERE o.username = '"
+				+ userName + "' ";
+
 		try {
 			connect = DbConnection.makeConnection();
-			if(connect != null) {
-				try(Statement stmnt = connect.createStatement()){
+			if (connect != null) {
+				try (Statement stmnt = connect.createStatement()) {
+
+					ResultSet checkUser = stmnt.executeQuery(checkusername);
+
+					if (!checkUser.next()) {
+						System.out.println("Invalid Username... ");
+						return;
+					}
+
 					ResultSet result = stmnt.executeQuery(viewUserHistory);
-					
-					System.out.println("History for user :- " +userName );
-					
+
+					System.out.println("History for user :- " + userName);
+
 					System.out.println("Order_id\tusername\ttotal_Amount\torder_date");
 					while (result.next()) {
 						int order_Id = result.getInt("order_id");
@@ -238,19 +279,18 @@ public class AdminOptions {
 						Timestamp orderDate = result.getTimestamp("order_date");
 						System.out.println(order_Id + "\t\t" + username + "\t\t" + totalAmount + "\t\t" + orderDate);
 					}
-					
-					
-				}catch(Exception e) {
+
+				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			}
-			
-		}catch(Exception e) {
+
+		} catch (Exception e) {
 			e.printStackTrace();
-		}finally {
+		} finally {
 			DbConnection.closeConnection(connect);
 		}
-		
+
 	}
 
 	public static void adminOps() {

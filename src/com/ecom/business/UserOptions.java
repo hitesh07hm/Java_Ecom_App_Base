@@ -9,9 +9,6 @@ public class UserOptions {
 
 	public static String currentUser = Authentication.currentUser;
 	private static double displayTotal = 0;
-	
-
-
 
 	public static void setDisplayTotal(double displayTotal) {
 		UserOptions.displayTotal = displayTotal;
@@ -45,64 +42,61 @@ public class UserOptions {
 		}
 
 	}
-	
+
 	public static void buyProduct() {
 		Connection connect = null;
-		
+
 		Scanner sc = new Scanner(System.in);
-		
+
 		System.out.println("Enter Product Id to Buy :- ");
-		
+
 		int product_Id = sc.nextInt();
-		
+
 		try {
-			connect =DbConnection.makeConnection();
-			if(connect != null) {
-				String checkProduct = " SELECT product_Id,quantity "
-						+ "FROM products WHERE product_Id = " +product_Id ;
-				
+			connect = DbConnection.makeConnection();
+			if (connect != null) {
+				String checkProduct = " SELECT product_Id,quantity " + "FROM products WHERE product_Id = " + product_Id;
+
 				Statement stmnt = connect.createStatement();
-				ResultSet result =stmnt.executeQuery(checkProduct);
-				if(!result.next()) {
+				ResultSet result = stmnt.executeQuery(checkProduct);
+				if (!result.next()) {
 					System.out.println("Product Id is not valid");
 					return;
 				}
-				
-				int checkQuantity =result.getInt("quantity");
-				
-				if(checkQuantity <= 0) {
+
+				int checkQuantity = result.getInt("quantity");
+
+				if (checkQuantity <= 0) {
 					System.out.println("Product is ouyt of stockl");
 					return;
 				}
-				
+
 				System.out.println("Enter Quantity youi want to buy");
-				int quantity =sc.nextInt();
-				
+				int quantity = sc.nextInt();
+
 				if (checkQuantity < quantity) {
-					System.out.println("we have only :- " +checkQuantity + "quantity available in the stock " );
-					return;	
+					System.out.println("we have only :- " + checkQuantity + "quantity available in the stock ");
+					return;
 				}
-				
-				String addToCart = "INSERT INTO cart (username, product_Id, quantity ) Values"
-						+ "('"+currentUser+"', "+product_Id+", "+quantity+")";
+
+				String addToCart = "INSERT INTO cart (username, product_Id, quantity ) Values" + "('" + currentUser
+						+ "', " + product_Id + ", " + quantity + ")";
 				stmnt.execute(addToCart);
 				System.out.println("Product added to Cart");
-				
+
 			}
-			
-		}catch(Exception e) {
+
+		} catch (Exception e) {
 			e.printStackTrace();
-		}finally {
+		} finally {
 			DbConnection.closeConnection(connect);
 		}
-		
-		
+
 	}
 
 	public static void viewCart() {
 
 		Connection connect = null;
-		
 
 		String viewCartQuery = "SELECT p.product_Id, p.name, p.price, c.quantity, (p.price * c.quantity) AS total "
 				+ "FROM cart c JOIN products p ON c.product_Id = p.product_Id " + "WHERE c.username = '" + currentUser
@@ -123,14 +117,13 @@ public class UserOptions {
 						System.out.println(name + "\t\t" + quantity + "\t" + price + "\t" + total);
 					}
 
-					
 					calculateDisplayTotal();
 					System.out.println("----------------------------------------------");
 					System.out.println("\t\t\t  Grand Total:- " + displayTotal);
 					System.out.println("----------------------------------------------");
 
 					result.close();
-					
+
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -145,7 +138,7 @@ public class UserOptions {
 	public static void purchaseItem() {
 		Connection connect = null;
 		Scanner sc = new Scanner(System.in);
-		
+
 		calculateDisplayTotal();
 		if (displayTotal == 0) {
 			System.out.println("Your cart is empty.");
@@ -158,20 +151,18 @@ public class UserOptions {
 				try {
 					Statement stmnt = connect.createStatement();
 
-					String insertOrder = "INSERT INTO orders (username, total_Amount) "
-					        + "VALUES ('" + currentUser + "', " + displayTotal + ")";
+					String insertOrder = "INSERT INTO orders (username, total_Amount) " + "VALUES ('" + currentUser
+							+ "', " + displayTotal + ")";
 					stmnt.executeUpdate(insertOrder);
-					
+
 					String updateProductQty = "UPDATE products p JOIN cart c ON p.product_Id = c.product_Id "
 							+ "SET p.quantity = p.quantity - c.quantity WHERE c.username = '" + currentUser + "'";
 					stmnt.executeUpdate(updateProductQty);
 
-					
 					String clearCart = "DELETE FROM cart WHERE username = '" + currentUser + "'";
 					stmnt.executeUpdate(clearCart);
-					
-					displayTotal=0;
 
+					displayTotal = 0;
 
 					System.out.println("Purchase successful. Order placed.");
 
@@ -216,7 +207,7 @@ public class UserOptions {
 				break;
 			case 5:
 				Main.main(null);
-			    return;
+				return;
 			case 6:
 				System.exit(0);
 			default:
@@ -224,8 +215,7 @@ public class UserOptions {
 			}
 		}
 	}
-	
-	
+
 	public static void calculateDisplayTotal() {
 		Connection connect = null;
 		try {
@@ -233,8 +223,8 @@ public class UserOptions {
 			if (connect != null) {
 				Statement stmnt = connect.createStatement();
 				String grandTotal = "SELECT SUM(p.price * c.quantity) AS grandTotal "
-						+ "FROM cart c JOIN products p ON c.product_Id = p.product_Id "
-						+ "WHERE c.username = '" + currentUser + "'";
+						+ "FROM cart c JOIN products p ON c.product_Id = p.product_Id " + "WHERE c.username = '"
+						+ currentUser + "'";
 				ResultSet rs = stmnt.executeQuery(grandTotal);
 				if (rs.next()) {
 					displayTotal = rs.getDouble("grandTotal");
@@ -248,8 +238,5 @@ public class UserOptions {
 			DbConnection.closeConnection(connect);
 		}
 	}
-	
-	
-
 
 }
