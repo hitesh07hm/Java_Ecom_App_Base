@@ -4,7 +4,7 @@
 A Basic Shopping app contains products,admin panel,Shopping Cart, Login & Register Etc ...
 
 
-## Installation
+## How to run this project:- 
 
 To run the project 
  
